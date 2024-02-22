@@ -23,7 +23,7 @@ fn random_id() -> String {
 //  /random/<max>
 //  /random/100
 #[get("/<max>")]
-fn random_range(max:u32) -> String {
+fn random_range(max: u32) -> String {
     format!("{}", my_random::get_random_int(max))
 }
 
@@ -38,15 +38,20 @@ fn status() -> String {
     format!("service is up")
 }
 
-
-//      curl -H 'Content-Type: application/json' data '{"key1": 1, "key2": "key string 2"' http://127.0.0.1:8060/post
+//      curl -X POST -H 'Content-Type: application/json' --data '{"key1": "1", "key2": "key string 2"}' http://127.0.0.1:8060/post
 
 #[post("/", format = "json", data = "<body>")]
-fn body( body: &str ) -> String {
+fn body(body: &str) -> String {
     let json: HashMap<String, String> = serde_json::from_str(body).unwrap();
-    format!("you sent: {:?}",json)
+    let mut res = format!("{:?}", json);
+    if json.contains_key("key1") {
+        res = res + "\n" + "key1 val: " + &json["key1"];
+    }
+    if json.contains_key("key2") {
+        res = res + "\n" + "key2 val: " + &json["key2"];
+    }
+    format!("{}", res)
 }
-
 
 #[launch]
 fn rocket() -> _ {
@@ -56,5 +61,4 @@ fn rocket() -> _ {
         .mount("/hello", routes![world])
         .mount("/random", routes![random_id, random_range, random_bool])
         .mount("/post", routes![body])
-
 }
